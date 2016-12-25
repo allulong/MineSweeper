@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    //数字颜色
+    <color name="number_1">#0303ce</color>
+    <color name="number_2">#0f8f16</color>
+    <color name="number_3">#bf2c2c</color>
+    <color name="number_4">#008492</color>
+    <color name="number_5">#797405</color>
+    <color name="number_6">#ffacff</color>
+    <color name="number_7">#ffac34</color>
+    <color name="number_8">#ffcd12</color>
+
+    <color name="number_1_mime">#ff0000</color>
+    <color name="number_2_doubt">#111111</color>
+    <color name="number_3_mack">#000000</color>
+
+    <color name="surface">#cccccc</color>
+</resources>
