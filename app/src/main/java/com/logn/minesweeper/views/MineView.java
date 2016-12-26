@@ -4,25 +4,37 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.logn.minesweeper.R;
+
+import static com.logn.minesweeper.views.MineView.MINE_STATUS.UNOPEN_MACK;
+import static com.logn.minesweeper.views.MineView.MINE_STATUS.UNOPEN_UNMACK;
 
 /**
  * Created by logn on 2016/12/25.
  */
 
-public class MineView extends FrameLayout {
+public class MineView extends FrameLayout implements View.OnClickListener, View.OnLongClickListener {
     private RelativeLayout mineView;
     private LayoutInflater inflater;
     private ImageView surface;
     private TextView numberView;
     private Context context;
 
-    private boolean isMine;
+    private boolean isMine = false;
+    private boolean doOpen = false;
+    /**
+     * 用于更改模式
+     * false 为翻开模式（默认）;
+     * true  为标记模式
+     */
+    private boolean mode = false;
     private MINE_STATUS mine_status;
     /**
      * 地雷为-1，其他为0-8
@@ -44,36 +56,97 @@ public class MineView extends FrameLayout {
         super(context, attrs);
         this.context = context;
         inflater = LayoutInflater.from(context);
+        initView();
     }
 
     public MineView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.context = context;
         inflater = LayoutInflater.from(context);
+        initView();
     }
 
 
     private void initView() {
-        LayoutParams lp;
-        lp = new LayoutParams(-1, -1);
-        lp.setMargins(0, 0, 0, 0);
+        LayoutParams layoutParams;
+        layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         //载入布局
         mineView = (RelativeLayout) inflater.inflate(R.layout.item_mine, null);
         surface = (ImageView) mineView.findViewById(R.id.item_mine_surface);
         numberView = (TextView) mineView.findViewById(R.id.item_mine_number);
-        //初始化时只显示imageview
-        numberView.setVisibility(GONE);
+
+        mineView.setOnClickListener(this);
+        mineView.setOnLongClickListener(this);
+        //初始化时
+        surface.setVisibility(GONE);
 
         //将加载的布局放进FrameLayout
-        addView(mineView);
+        addView(mineView, layoutParams);
 
-        setNumber(0);
+        setNumber(9, true);   //表示刚开始的状态
+        mine_status = MINE_STATUS.UNOPEN_UNMACK;
         show(MINE_STATUS.UNOPEN_UNMACK);
     }
 
-    public void initMine(int number, boolean isMine) {
+    /**
+     * 一定要调用此方法，用于初始化mine 的数字
+     *
+     * @param number -1 代表地雷（暂时的。。。）
+     */
+    public void initMine(int number) {
         setNumber(number);
-        this.isMine = isMine;
+        if (number == -1) {
+            isMine = true;
+        } else {
+            isMine = false;
+        }
+    }
+
+    /**
+     * 重写{@link #onMeasure(int, int)}实现限制 view 为正方形
+     * 默认值为120
+     *
+     * @param widthMeasureSpec
+     * @param heightMeasureSpec
+     */
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        int width = getSide(120, widthMeasureSpec);
+        int height = getSide(120, heightMeasureSpec);
+
+        if (width < height) {
+            height = width;
+        } else {
+            width = height;
+        }
+        setMeasuredDimension(width, height);
+
+    }
+
+    private int getSide(int defaultSize, int measureSpec) {
+        int mySize = defaultSize;
+
+        int mode = MeasureSpec.getMode(measureSpec);
+        int size = MeasureSpec.getSize(measureSpec);
+
+        switch (mode) {
+            case MeasureSpec.UNSPECIFIED: {//如果没有指定大小，就设置为默认大小
+                mySize = defaultSize;
+                break;
+            }
+            case MeasureSpec.AT_MOST: {//如果测量模式是最大取值为size
+                //我们将大小取最大值,你也可以取其他值
+                mySize = size;
+                break;
+            }
+            case MeasureSpec.EXACTLY: {//如果是固定的大小，那就不要去改变它
+                mySize = size;
+                break;
+            }
+        }
+        return mySize;
     }
 
     public MINE_STATUS getMine_status() {
@@ -84,13 +157,31 @@ public class MineView extends FrameLayout {
         return number;
     }
 
+    public void changMode() {
+        mode = !mode;
+    }
+
     /**
      * 初始化时设置Mine的状态，并根据状设置颜色
      *
      * @param number
      */
     public void setNumber(int number) {
+        setNumber(number, false);
+    }
+
+    /**
+     * @param number
+     * @param down   设置数字的时候是否修改界面
+     */
+    private void setNumber(int number, boolean down) {
         this.number = number;
+        if (down)
+            setTextColor(number);
+    }
+
+    private void setTextColor(int number) {
+        numberView.setText(number + "");
         switch (number) {
             case 1:
                 numberView.setTextColor(getResources().getColor(R.color.number_1));
@@ -120,7 +211,7 @@ public class MineView extends FrameLayout {
                 numberView.setTextColor(getResources().getColor(R.color.number_3_mack));
                 break;
             default:
-                numberView.setTextColor(getResources().getColor(R.color.surface));
+                numberView.setTextColor(getResources().getColor(R.color.number_3_mack));
         }
     }
 
@@ -130,37 +221,87 @@ public class MineView extends FrameLayout {
      * @param status
      */
     public void show(MINE_STATUS status) {
-        switch (status) {
+        switch (status) {       //目前的状态，即要显示的状态
             case UNOPEN_UNMACK:
-                mine_status = MINE_STATUS.UNOPEN_UNMACK;
-                break;
-            case UNOPEN_MACK:   //此状态下不可翻开
-                if (mine_status == MINE_STATUS.UNOPEN_UNMACK) {
-
-                    mine_status = MINE_STATUS.UNOPEN_MACK;
+                if (mine_status == MINE_STATUS.UNOPEN_UNMACK || mine_status == MINE_STATUS.UNOPEN_DOUBT) {
+                    setTextColor(9);
+                    mine_status = UNOPEN_UNMACK;
                 }
                 break;
-            case UNOPEN_DOUBT:   //此状态下不可翻开
-                if (mine_status == MINE_STATUS.UNOPEN_MACK) {
-
-                    mine_status = MINE_STATUS.UNOPEN_MACK;
+            case UNOPEN_MACK:   //只有当前状态为unopen_unmake 时才能显示此状态
+                if (mine_status == MINE_STATUS.UNOPEN_UNMACK) {
+                    setTextColor(-3);
+                    mine_status = UNOPEN_MACK;
                 }
                 break;
-            case OPEN_MINE:     //完蛋
-                if (mine_status == MINE_STATUS.UNOPEN_UNMACK) {
-
+            case UNOPEN_DOUBT:   //只有当前状态为unopen_make 时才能显示此状态
+                if (mine_status == UNOPEN_MACK) {
+                    setTextColor(-2);
+                    mine_status = MINE_STATUS.UNOPEN_DOUBT;
+                }
+                break;
+            case OPEN_MINE:     //只有当前状态为unopen_unmake 时才能显示此状态
+                if (mine_status == MINE_STATUS.UNOPEN_UNMACK && isMine) {
+                    setTextColor(-1);
                     mine_status = MINE_STATUS.OPEN_MINE;
                 }
                 break;
-            case OPEN_NUMBER:
-                if (mine_status == MINE_STATUS.UNOPEN_UNMACK) {
-                    surface.setVisibility(GONE);
-                    numberView.setVisibility(View.VISIBLE);
+            case OPEN_NUMBER:   //只有当前状态为unopen_unmake 时才能显示此状态
+                if (mine_status == MINE_STATUS.UNOPEN_UNMACK && !isMine) {
+//                    surface.setVisibility(GONE);
+//                    numberView.setVisibility(View.VISIBLE);
+//                    mine_status = MINE_STATUS.OPEN_NUMBER;
+                    setTextColor(number);
                     mine_status = MINE_STATUS.OPEN_NUMBER;
                 }
                 break;
         }
 
+    }
+
+    private void changeStatus() {
+        switch (mine_status) {
+            case UNOPEN_UNMACK:
+                if (doOpen) {
+                    Toast.makeText(context, "unmack", Toast.LENGTH_SHORT).show();
+                    if (isMine) {
+                        show(MINE_STATUS.OPEN_MINE);
+                    } else {
+                        show(MINE_STATUS.OPEN_NUMBER);
+                    }
+                } else {
+                    Toast.makeText(context, "mack", Toast.LENGTH_SHORT).show();
+                    show(UNOPEN_MACK);
+                }
+                break;
+            case UNOPEN_MACK:
+                show(MINE_STATUS.UNOPEN_DOUBT);
+                break;
+            case UNOPEN_DOUBT:
+                show(MINE_STATUS.UNOPEN_UNMACK);
+                break;
+            case OPEN_MINE:
+                show(MINE_STATUS.OPEN_MINE);
+                break;
+            case OPEN_NUMBER:
+                show(MINE_STATUS.OPEN_NUMBER);
+                break;
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        doOpen = !mode;
+        Toast.makeText(context, "click: " + mine_status, Toast.LENGTH_SHORT).show();
+        changeStatus();
+    }
+
+    @Override
+    public boolean onLongClick(View view) {
+        doOpen = mode;
+        Toast.makeText(context, "longClick", Toast.LENGTH_SHORT).show();
+        changeStatus();
+        return true;
     }
 
     /**
