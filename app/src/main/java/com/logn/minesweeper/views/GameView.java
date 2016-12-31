@@ -3,7 +3,6 @@ package com.logn.minesweeper.views;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +15,6 @@ import com.logn.minesweeper.utils.MineUtils;
 
 import java.util.List;
 
-import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
 
 /**
  * Created by OurEDA on 2016/12/25.
@@ -30,7 +28,10 @@ public class GameView extends FrameLayout implements View.OnClickListener {
     private int rows;
     private int columns;
     private int mines;
-    private MODE mode = MODE.PRIMARY;
+    private static MODE mode = MODE.PRIMARY;
+    //用于计算非地雷的数量
+    private int noMineSum = 0;
+    private int count = 0;
 
     /**
      * 标记游戏是否结束
@@ -40,7 +41,7 @@ public class GameView extends FrameLayout implements View.OnClickListener {
     /**
      * 判断是有有第一个 MineView 翻开了。
      */
-    private boolean hasFirst = false;
+    private boolean isFirst = true;
 
 
     @Override
@@ -56,8 +57,14 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         SENIOR
     }
 
-    public void setMode(MODE mode) {
-        this.mode = mode;
+    private void initStatus() {
+        count = 0;
+        isFirst = true;
+        isGameOver = false;
+    }
+
+    public static void setMode(MODE mode) {
+        GameView.mode = mode;
     }
 
     private LinearLayout mineFields;
@@ -85,12 +92,15 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         setMineField(mode);
         mineViews = new MineView[rows][columns];
         seedMines();
-
+        //设置监听器，游戏结束时拦截触摸状态，并执行响应操作
         this.setOnClickListener(this);
 
         addView(mineFields, lp);
     }
 
+    /**
+     * 根据已知的行数列数，生成初始的view对象
+     */
     private void seedMines() {
         for (int i = 0; i < rows; i++) {
             LinearLayout ll = new LinearLayout(context);
@@ -109,31 +119,68 @@ public class GameView extends FrameLayout implements View.OnClickListener {
     }
 
     private MineView.OnStatusChangeListener listener = new MineView.OnStatusChangeListener() {
+        /**
+         *
+         * @param view  被点击的MineView
+         * @param doOpen    是否将要点开这个 MineView, （第二次以后点击才生效）
+         * @return 返回true时，一定点开,false则不一定
+         */
         @Override
-        public boolean change(View view) {
+        public boolean change(View view, boolean doOpen) {
             MineView mineV = (MineView) view;
             int x = mineV.getPoint().getX();
             int y = mineV.getPoint().getY();
 
-            if (!hasFirst) {
+
+            if (isFirst) {  //第一次点击执行此段代码，生成地雷分布图
                 mineArray = MineUtils.mineGenerator(x, y, rows, columns, mines);
                 setAllMineNumber();
 
                 //当一个打开的MineView为空时，直接打开周围的几个MineView
                 openMineAround(x, y);
-                hasFirst = true;
+                isFirst = false;
+
+
+                Toast.makeText(context, "_count:" + count, Toast.LENGTH_SHORT).show();
                 return true;
             }
-            if (mineV.getNumber() == -1) {
-                showAllRealMine();
-                isGameOver = true;
-                mineV.setBackgroundColor(getResources().getColor(R.color.number_8));
-                doItWhenGameOver();
+
+            //第二次以后的点击执行后面的代码，此时doOpen起作用
+            if (doOpen && mineV.getMine_status() == MineView.MINE_STATUS.UNOPEN_UNMACK) { //点开view时，判断是否是地雷
+                if (mineV.getNumber() == -1) {    //踩到了地雷，游戏结束。
+                    showAllRealMine();
+                    isGameOver = true;
+                    mineV.setBackgroundColor(getResources().getColor(R.color.number_8));
+                    doItWhenGameOver();
+                    return false;
+                } else if (mineV.getNumber() == 0) {     //踩到了0，四周都为数字
+                    openMineAround(x, y);   //位置（x,y）有可能在这里被打开，打开了则会被计数
+                }
+                //先判断是否打开了，不管是不是0都手动打开并计数
+                if (mineV.getMine_status() == MineView.MINE_STATUS.UNOPEN_UNMACK) {
+                    mineV.show(MineView.MINE_STATUS.OPEN_MINE);
+                    countAdd();
+                }
             }
-            openMineAround(x, y);
+
+
+            Toast.makeText(context, "count:" + count, Toast.LENGTH_SHORT).show();
             return false;
         }
     };
+
+    /**
+     * 恢复到最开始的状态
+     */
+    public void resetGame() {
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                MineView mv = (MineView) mineFields.findViewById(getID(i, j));
+                mv.resetView();
+            }
+        }
+        initStatus();
+    }
 
     /**
      * 当踩到地雷时，显示所有的地雷
@@ -145,7 +192,6 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < columns; j++) {
                 mv = (MineView) mineFields.findViewById(getID(i, j));
-                Log.e(TAG, "[" + i + ":" + j + "]->" + mv.getNumber());
                 if (mv.getNumber() == -1) {
                     mv.show(MineView.MINE_STATUS.OPEN_MINE);
                 }
@@ -153,8 +199,12 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         }
     }
 
+    private void countAdd() {
+        count++;
+    }
+
     /**
-     * 先判断是否是0
+     * 先判断位置（x,y）是否是0
      * 是则打开周围的MineView 并且继续判断打开的MineView
      *
      * @param x
@@ -164,11 +214,11 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         List<Point> pList = MineUtils.getMineAround(x, y, rows, columns);
         MineView mine = (MineView) mineFields.findViewById(getID(x, y));
         if (mine.getNumber() == 0) {
-            mine.show(MineView.MINE_STATUS.OPEN_NUMBER);
             for (Point p : pList) {
                 MineView mv = (MineView) mineFields.findViewById(getID(p.x, p.y));
                 if (mv.getMine_status() == MineView.MINE_STATUS.UNOPEN_UNMACK) {
                     mv.show(MineView.MINE_STATUS.OPEN_NUMBER);
+                    countAdd();
                     openMineAround(p.x, p.y);
                 }
             }
@@ -227,6 +277,8 @@ public class GameView extends FrameLayout implements View.OnClickListener {
                 mines = 99;
                 break;
         }
+        noMineSum = rows * columns - mines;
+        count = 0;
     }
 
 

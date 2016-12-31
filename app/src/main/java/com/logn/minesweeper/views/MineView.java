@@ -230,6 +230,7 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
                 numberView.setTextColor(getResources().getColor(R.color.number_6));
                 break;
             case -1:
+                numberView.setText("*");
                 numberView.setTextColor(getResources().getColor(R.color.number_1_mime));
                 break;
             case -2:
@@ -249,6 +250,16 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
                 //numberView.setTextColor(getResources().getColor(R.color.number_3_mack));
                 surface.setImageResource(R.drawable.mine_surface_normal);
         }
+    }
+
+    /**
+     * 重置view
+     * 用于重新开始游戏
+     */
+    public void resetView() {
+        setSurface(9);
+        mine_status = UNOPEN_UNMACK;
+        setNumber(0);
     }
 
     /**
@@ -296,7 +307,7 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
     }
 
     private void changeStatus() {
-        if (listener != null && listener.change(this)) {
+        if (listener != null && listener.change(this, doOpen)) {
             doOpen = true;
         }
         switch (mine_status) {
@@ -400,7 +411,7 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
          * @param view
          * @return
          */
-        boolean change(View view);
+        boolean change(View view, boolean doOpen);
     }
 
 
