@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#bebebe"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.logn.minesweeper.views.MineView
+            android:id="@+id/mine_view"
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:id="@+id/mine_view_2"
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:id="@+id/mine_view_3"
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+
+        <com.logn.minesweeper.views.MineView
+            android:layout_width="120px"
+            android:layout_height="120px">
+
+        </com.logn.minesweeper.views.MineView>
+    </LinearLayout>
+
+
+</LinearLayout>

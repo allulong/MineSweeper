@@ -16,7 +16,13 @@
 
     <color name="number_1_mime">#ff0000</color>
     <color name="number_2_doubt">#111111</color>
-    <color name="number_3_mack">#000000</color>
+    <color name="number_3_mack">#ff0000</color>
 
     <color name="surface">#cccccc</color>
+
+    //
+
+    <color name="color_item">#33ffffff</color>
+    <color name="button_back">#756A61</color>
+    <color name="button_pressed">#53341b</color>
 </resources>

@@ -1,6 +1,12 @@
 package com.logn.minesweeper.utils;
 
+import android.graphics.Point;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
+
+import static android.R.attr.y;
 
 /**
  * 输入行数、列数、地雷数目，生成地雷分布图。
@@ -10,46 +16,21 @@ public class MineUtils {
     public static final int MINE = -1;
 
     private static int[][] mine;
+    private static List<Point> mineAround;
 
     /**
-     * 为了避免点击的第一个方块为地雷，设置点x,y 以及四周的八个（？）为非雷区
+     * 为了避免点击的第一个方块为地雷，设置位置点x,y 以及四周的八个（？）为禁雷区
      * 即 为先设置为（-2）
      *
      * @param i
      * @param j
      */
     private static void setFirst(int i, int j, int rows, int columns) {
-
-        //(i-1)->(j-1,j,j+1)
-        if (i - 1 >= 0) {
-            if (j - 1 >= 0) {
-                mine[i - 1][j - 1] = -2;
-            }
-            if (j + 1 < columns) {
-                mine[i - 1][j] = -2;
-            }
-            mine[i - 1][j + 1] = -2;
+        List<Point> plist = getMineAround(i, j, rows, columns);
+        for (Point p : plist) {
+            mine[p.x][p.y] = -2;
         }
-        //(i)->(j-1,j+1)
-        if (i >= 0) {
-            if (j - 1 >= 0) {
-                mine[i][j - 1] = -2;
-            }
-            if (j + 1 < columns) {
-                mine[i][j + 1] = -2;
-            }
-            mine[i][j] = -2;
-        }
-        //(i+1)->(j-1,j,j+1)
-        if (i + 1 < rows) {
-            if (j - 1 >= 0) {
-                mine[i + 1][j - 1] = -2;
-            }
-            if (j + 1 < columns) {
-                mine[i + 1][j + 1] = -2;
-            }
-            mine[i + 1][j] = -2;
-        }
+        mine[i][j] = -2;
     }
 
     /**
@@ -101,51 +82,13 @@ public class MineUtils {
      */
     private static int getAroundNum(int i, int j, int rows, int columns, int[][] mine) {
         int num = 0;
-        //(i-1)->(j-1,j,j+1)
-        if (i - 1 >= 0) {
-            if (j - 1 >= 0) {
-                if (mine[i - 1][j - 1] == -1) {
-                    num++;
-                }
-            }
-            if (j + 1 < columns) {
-                if (mine[i - 1][j + 1] == -1) {
-                    num++;
-                }
-            }
-            if (mine[i - 1][j] == -1) {
+        List<Point> list = getMineAround(i, j, rows, columns);
+        for (Point p : list) {
+            if (mine[p.x][p.y] == -1) {
                 num++;
             }
         }
-        //(i)->(j-1,j+1)
-        if (i >= 0) {
-            if (j - 1 >= 0) {
-                if (mine[i][j - 1] == -1) {
-                    num++;
-                }
-            }
-            if (j + 1 < columns) {
-                if (mine[i][j + 1] == -1) {
-                    num++;
-                }
-            }
-        }
-        //(i+1)->(j-1,j,j+1)
-        if (i + 1 < rows) {
-            if (j - 1 >= 0) {
-                if (mine[i + 1][j - 1] == -1) {
-                    num++;
-                }
-            }
-            if (j + 1 < columns) {
-                if (mine[i + 1][j + 1] == -1) {
-                    num++;
-                }
-            }
-            if (mine[i + 1][j] == -1) {
-                num++;
-            }
-        }
+
         return num;
     }
 
@@ -159,6 +102,41 @@ public class MineUtils {
         Random random = new Random();
         int a = Math.abs(random.nextInt()) % max;
         return a;
+    }
+
+    public static List<Point> getMineAround(int i, int j, int rows, int columns) {
+        List<Point> aroundList = new ArrayList<>();
+        //(i-1)->(j-1,j,j+1)
+        if (i - 1 >= 0) {
+            if (j - 1 >= 0) {
+                aroundList.add(new Point(i - 1, j - 1));
+            }
+            if (j + 1 < columns) {
+                aroundList.add(new Point(i - 1, j + 1));
+            }
+            aroundList.add(new Point(i - 1, j));
+        }
+        //(i)->(j-1,j+1)
+        if (i >= 0) {
+            if (j - 1 >= 0) {
+                aroundList.add(new Point(i, j - 1));
+            }
+            if (j + 1 < columns) {
+                aroundList.add(new Point(i, j + 1));
+            }
+
+        }
+        //(i+1)->(j-1,j,j+1)
+        if (i + 1 < rows) {
+            if (j - 1 >= 0) {
+                aroundList.add(new Point(i + 1, j - 1));
+            }
+            if (j + 1 < columns) {
+                aroundList.add(new Point(i + 1, j + 1));
+            }
+            aroundList.add(new Point(i + 1, j));
+        }
+        return aroundList;
     }
 
 }

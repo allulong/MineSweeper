@@ -9,7 +9,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.logn.minesweeper.R;
 
@@ -17,6 +16,13 @@ import static com.logn.minesweeper.views.MineView.MINE_STATUS.UNOPEN_MACK;
 import static com.logn.minesweeper.views.MineView.MINE_STATUS.UNOPEN_UNMACK;
 
 /**
+ * 目前用数字代表不同的状态
+ * 0到8即正常数字
+ * -1代表是地雷
+ * -2代表是怀疑的状态（仅用于显示状态）
+ * -3代表是标记的状态（仅用于显示状态）
+ * 其他数字（9）代表最开始状态（仅用于显示状态）
+ * <p>
  * Created by logn on 2016/12/25.
  */
 
@@ -26,6 +32,22 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
     private ImageView surface;
     private TextView numberView;
     private Context context;
+    private Point point;
+
+    private OnStatusChangeListener listener;
+
+    public void setListener(OnStatusChangeListener listener) {
+        this.listener = listener;
+    }
+
+    public Point getPoint() {
+        return point;
+    }
+
+    public void setPoint(int x, int y) {
+        point.setX(x);
+        point.setY(y);
+    }
 
     private boolean isMine = false;
     private boolean doOpen = false;
@@ -68,6 +90,7 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
 
 
     private void initView() {
+        point = new Point(0, 0);
         LayoutParams layoutParams;
         layoutParams = new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         //载入布局
@@ -77,13 +100,14 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
 
         mineView.setOnClickListener(this);
         mineView.setOnLongClickListener(this);
-        //初始化时
-        surface.setVisibility(GONE);
+        //初始化时,显示number
+        selectNumberView();
 
         //将加载的布局放进FrameLayout
         addView(mineView, layoutParams);
 
-        setNumber(9, true);   //表示刚开始的状态
+        setNumber(0);   //初始化时默认为0
+        setSurface(9);//表示刚开始的状态
         mine_status = MINE_STATUS.UNOPEN_UNMACK;
         show(MINE_STATUS.UNOPEN_UNMACK);
     }
@@ -95,11 +119,7 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
      */
     public void initMine(int number) {
         setNumber(number);
-        if (number == -1) {
-            isMine = true;
-        } else {
-            isMine = false;
-        }
+
     }
 
     /**
@@ -162,27 +182,35 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
     }
 
     /**
-     * 初始化时设置Mine的状态，并根据状设置颜色
+     * 设置此地雷view的实质
+     * 即是数字？还是地雷？
      *
      * @param number
      */
     public void setNumber(int number) {
-        setNumber(number, false);
+        this.number = number;
+        if (number == -1) {
+            isMine = true;
+        } else {
+            isMine = false;
+        }
     }
+
 
     /**
+     * 用于显示不同状态的界面（现在用数字代表多种状态）
+     *
      * @param number
-     * @param down   设置数字的时候是否修改界面
      */
-    private void setNumber(int number, boolean down) {
-        this.number = number;
-        if (down)
-            setTextColor(number);
-    }
-
-    private void setTextColor(int number) {
+    private void setSurface(int number) {
+        selectAll();
         numberView.setText(number + "");
+        surface.setImageResource(R.drawable.mine_surface_disable);
+        surface.setScaleType(ImageView.ScaleType.FIT_XY);
         switch (number) {
+            case 0:
+                numberView.setText("");
+                //break;
             case 1:
                 numberView.setTextColor(getResources().getColor(R.color.number_1));
                 break;
@@ -205,13 +233,21 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
                 numberView.setTextColor(getResources().getColor(R.color.number_1_mime));
                 break;
             case -2:
+                selectAll();
+                numberView.setText("?");
+                surface.setImageResource(R.drawable.mine_surface_normal);
                 numberView.setTextColor(getResources().getColor(R.color.number_2_doubt));
                 break;
             case -3:
+                selectAll();
+                numberView.setText("X");
                 numberView.setTextColor(getResources().getColor(R.color.number_3_mack));
+                surface.setImageResource(R.drawable.mine_surface_normal);
                 break;
             default:
-                numberView.setTextColor(getResources().getColor(R.color.number_3_mack));
+                selectSurface();
+                //numberView.setTextColor(getResources().getColor(R.color.number_3_mack));
+                surface.setImageResource(R.drawable.mine_surface_normal);
         }
     }
 
@@ -221,28 +257,28 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
      * @param status
      */
     public void show(MINE_STATUS status) {
-        switch (status) {       //目前的状态，即要显示的状态
+        switch (status) {       //将要显示的状态
             case UNOPEN_UNMACK:
                 if (mine_status == MINE_STATUS.UNOPEN_UNMACK || mine_status == MINE_STATUS.UNOPEN_DOUBT) {
-                    setTextColor(9);
+                    setSurface(9);
                     mine_status = UNOPEN_UNMACK;
                 }
                 break;
             case UNOPEN_MACK:   //只有当前状态为unopen_unmake 时才能显示此状态
                 if (mine_status == MINE_STATUS.UNOPEN_UNMACK) {
-                    setTextColor(-3);
+                    setSurface(-3);
                     mine_status = UNOPEN_MACK;
                 }
                 break;
             case UNOPEN_DOUBT:   //只有当前状态为unopen_make 时才能显示此状态
                 if (mine_status == UNOPEN_MACK) {
-                    setTextColor(-2);
+                    setSurface(-2);
                     mine_status = MINE_STATUS.UNOPEN_DOUBT;
                 }
                 break;
             case OPEN_MINE:     //只有当前状态为unopen_unmake 时才能显示此状态
                 if (mine_status == MINE_STATUS.UNOPEN_UNMACK && isMine) {
-                    setTextColor(-1);
+                    setSurface(-1);
                     mine_status = MINE_STATUS.OPEN_MINE;
                 }
                 break;
@@ -251,7 +287,7 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
 //                    surface.setVisibility(GONE);
 //                    numberView.setVisibility(View.VISIBLE);
 //                    mine_status = MINE_STATUS.OPEN_NUMBER;
-                    setTextColor(number);
+                    setSurface(number);
                     mine_status = MINE_STATUS.OPEN_NUMBER;
                 }
                 break;
@@ -260,17 +296,18 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
     }
 
     private void changeStatus() {
+        if (listener != null && listener.change(this)) {
+            doOpen = true;
+        }
         switch (mine_status) {
             case UNOPEN_UNMACK:
                 if (doOpen) {
-                    Toast.makeText(context, "unmack", Toast.LENGTH_SHORT).show();
                     if (isMine) {
                         show(MINE_STATUS.OPEN_MINE);
                     } else {
                         show(MINE_STATUS.OPEN_NUMBER);
                     }
                 } else {
-                    Toast.makeText(context, "mack", Toast.LENGTH_SHORT).show();
                     show(UNOPEN_MACK);
                 }
                 break;
@@ -292,14 +329,12 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
     @Override
     public void onClick(View view) {
         doOpen = !mode;
-        Toast.makeText(context, "click: " + mine_status, Toast.LENGTH_SHORT).show();
         changeStatus();
     }
 
     @Override
     public boolean onLongClick(View view) {
         doOpen = mode;
-        Toast.makeText(context, "longClick", Toast.LENGTH_SHORT).show();
         changeStatus();
         return true;
     }
@@ -314,5 +349,59 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
         OPEN_MINE,          //打开的地雷，显示imageView，地雷
         OPEN_NUMBER         //打开的数字，显示textView，或者 空
     }
+
+
+    private void selectSurface() {
+        numberView.setVisibility(GONE);
+        surface.setVisibility(VISIBLE);
+    }
+
+    private void selectNumberView() {
+        surface.setVisibility(GONE);
+        numberView.setVisibility(VISIBLE);
+    }
+
+    private void selectAll() {
+        surface.setVisibility(VISIBLE);
+        numberView.setVisibility(VISIBLE);
+    }
+
+    public class Point {
+        int x;
+        int y;
+
+        public Point(int x, int y) {
+            setX(x);
+            setY(y);
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+    }
+
+    public interface OnStatusChangeListener {
+        /**
+         * 此方法返回为真时
+         * 长按和点击都打开mine view
+         *
+         * @param view
+         * @return
+         */
+        boolean change(View view);
+    }
+
 
 }
