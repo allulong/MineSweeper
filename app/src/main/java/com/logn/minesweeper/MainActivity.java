@@ -43,16 +43,16 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(RadioGroup radioGroup, int checkId) {
                 switch (checkId) {
                     case R.id.game_mode_primary:
-                        GameView.setMode(GameView.MODE.PRIMARY);
+                        GameView.setLevel(GameView.LEVEL.PRIMARY);
                         break;
                     case R.id.game_mode_inter:
-                        GameView.setMode(GameView.MODE.INTERMEDIATE);
+                        GameView.setLevel(GameView.LEVEL.INTERMEDIATE);
                         break;
                     case R.id.game_mode_senior:
-                        GameView.setMode(GameView.MODE.SENIOR);
+                        GameView.setLevel(GameView.LEVEL.SENIOR);
                         break;
                     default:
-                        GameView.setMode(GameView.MODE.PRIMARY);
+                        GameView.setLevel(GameView.LEVEL.PRIMARY);
 
                 }
             }

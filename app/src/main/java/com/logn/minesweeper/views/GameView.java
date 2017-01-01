@@ -1,23 +1,23 @@
 package com.logn.minesweeper.views;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Point;
+import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
-import com.logn.minesweeper.R;
 import com.logn.minesweeper.utils.MineUtils;
 
 import java.util.List;
 
 
 /**
- * Created by OurEDA on 2016/12/25.
+ * Created by logn on 2016/12/25.
  */
 
 public class GameView extends FrameLayout implements View.OnClickListener {
@@ -28,10 +28,26 @@ public class GameView extends FrameLayout implements View.OnClickListener {
     private int rows;
     private int columns;
     private int mines;
-    private static MODE mode = MODE.PRIMARY;
+    private static LEVEL level = LEVEL.PRIMARY;
     //用于计算非地雷的数量
     private int noMineSum = 0;
     private int count = 0;
+
+    private boolean mode = false;
+
+    public boolean isMode() {
+        return mode;
+    }
+
+    public void setMode(boolean mode) {
+        this.mode = mode;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                MineView mv = (MineView) mineFields.findViewById(getID(i, j));
+                mv.setMode(mode);
+            }
+        }
+    }
 
     /**
      * 标记游戏是否结束
@@ -44,6 +60,12 @@ public class GameView extends FrameLayout implements View.OnClickListener {
     private boolean isFirst = true;
 
 
+    private OnProgressListener progressListener;
+
+    public void setOnProgressListener(OnProgressListener progressListener) {
+        this.progressListener = progressListener;
+    }
+
     @Override
     public void onClick(View view) {
         if (isGameOver) {
@@ -51,7 +73,7 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         }
     }
 
-    public enum MODE {
+    public enum LEVEL {
         PRIMARY,
         INTERMEDIATE,
         SENIOR
@@ -63,8 +85,8 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         isGameOver = false;
     }
 
-    public static void setMode(MODE mode) {
-        GameView.mode = mode;
+    public static void setLevel(LEVEL level) {
+        GameView.level = level;
     }
 
     private LinearLayout mineFields;
@@ -89,7 +111,7 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         mineFields = new LinearLayout(context);
         mineFields.setOrientation(LinearLayout.VERTICAL);
         //通过MODE来决定行数列数
-        setMineField(mode);
+        setMineField(level);
         mineViews = new MineView[rows][columns];
         seedMines();
         //设置监听器，游戏结束时拦截触摸状态，并执行响应操作
@@ -141,7 +163,6 @@ public class GameView extends FrameLayout implements View.OnClickListener {
                 isFirst = false;
 
 
-                Toast.makeText(context, "_count:" + count, Toast.LENGTH_SHORT).show();
                 return true;
             }
 
@@ -150,7 +171,9 @@ public class GameView extends FrameLayout implements View.OnClickListener {
                 if (mineV.getNumber() == -1) {    //踩到了地雷，游戏结束。
                     showAllRealMine();
                     isGameOver = true;
-                    mineV.setBackgroundColor(getResources().getColor(R.color.number_8));
+                    //mineV.setBackgroundColor(getResources().getColor(R.color.number_8));
+                    //标记被踩到的地雷
+                    mineV.showMineBond();
                     doItWhenGameOver();
                     return false;
                 } else if (mineV.getNumber() == 0) {     //踩到了0，四周都为数字
@@ -164,7 +187,6 @@ public class GameView extends FrameLayout implements View.OnClickListener {
             }
 
 
-            Toast.makeText(context, "count:" + count, Toast.LENGTH_SHORT).show();
             return false;
         }
     };
@@ -180,6 +202,9 @@ public class GameView extends FrameLayout implements View.OnClickListener {
             }
         }
         initStatus();
+        if (progressListener != null) {
+            progressListener.onProgress(0);
+        }
     }
 
     /**
@@ -193,7 +218,7 @@ public class GameView extends FrameLayout implements View.OnClickListener {
             for (int j = 0; j < columns; j++) {
                 mv = (MineView) mineFields.findViewById(getID(i, j));
                 if (mv.getNumber() == -1) {
-                    mv.show(MineView.MINE_STATUS.OPEN_MINE);
+                    mv.showRealMine();
                 }
             }
         }
@@ -201,6 +226,9 @@ public class GameView extends FrameLayout implements View.OnClickListener {
 
     private void countAdd() {
         count++;
+        if (progressListener != null) {
+            progressListener.onProgress(count / (float) noMineSum);
+        }
     }
 
     /**
@@ -247,20 +275,8 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         }
     }
 
-    private String showMine() {
-        String data = "~";
-        if (mineArray != null)
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < columns; j++) {
-                    data += mineArray[i][j] + ",";
-                }
-                data += "\n";
-            }
-        return data;
-    }
-
-    private void setMineField(MODE mode) {
-        switch (mode) {
+    private void setMineField(LEVEL level) {
+        switch (level) {
             case PRIMARY:
                 rows = 9;
                 columns = 9;
@@ -297,8 +313,30 @@ public class GameView extends FrameLayout implements View.OnClickListener {
      * 游戏结束后的操作
      */
     private void doItWhenGameOver() {
-        Toast.makeText(context, "Game Over!", Toast.LENGTH_SHORT).show();
+        showDialogWhenOver("进度：" + (int) (count / (float) noMineSum * 100) + "%");
     }
 
+    public interface OnProgressListener {
+        void onProgress(float progress);
+    }
 
+    private void showDialogWhenOver(String info) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage(info);
+        builder.setTitle("游戏结束");
+        builder.setPositiveButton("重新开始", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                resetGame();
+            }
+        });
+        builder.setNegativeButton("关闭", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        builder.create().show();
+    }
 }

@@ -12,6 +12,7 @@ import android.widget.TextView;
 
 import com.logn.minesweeper.R;
 
+import static com.logn.minesweeper.views.MineView.MINE_STATUS.OPEN_MINE;
 import static com.logn.minesweeper.views.MineView.MINE_STATUS.UNOPEN_MACK;
 import static com.logn.minesweeper.views.MineView.MINE_STATUS.UNOPEN_UNMACK;
 
@@ -177,8 +178,8 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
         return number;
     }
 
-    public void changMode() {
-        mode = !mode;
+    public void setMode(boolean m) {
+        mode = m;
     }
 
     /**
@@ -260,6 +261,26 @@ public class MineView extends FrameLayout implements View.OnClickListener, View.
         setSurface(9);
         mine_status = UNOPEN_UNMACK;
         setNumber(0);
+    }
+
+    /**
+     * 用于无论在何种状态下都显示地雷
+     * 避免在被标记状态下无法显示
+     */
+    public void showRealMine() {
+        if (isMine) {
+            setSurface(-1);
+            mine_status = OPEN_MINE;
+        }
+    }
+
+    /**
+     * 标记被踩到的地雷（改变背景）
+     */
+    public void showMineBond() {
+        if (isMine) {
+            surface.setImageResource(R.drawable.mine_show_bond);
+        }
     }
 
     /**

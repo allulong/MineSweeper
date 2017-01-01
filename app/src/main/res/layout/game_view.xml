@@ -4,26 +4,41 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/title_bar"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:background="#eee"
-        android:orientation="horizontal">
+        android:background="#eee">
 
         <Button
             android:id="@+id/game_refresh"
-            android:layout_width="48dp"
+            android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:text="刷新" />
+            android:layout_alignParentRight="true"
+            android:background="#00ffffff"
+            android:text="@string/game_restart" />
+
+        <Button
+            android:id="@+id/game_finish"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:background="#00ffffff"
+            android:text="@string/game_quit" />
 
         <TextView
+            android:id="@+id/game_progress"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="扫雷"
+            android:text="@string/progress"
             android:textSize="18sp" />
-    </LinearLayout>
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:background="#777" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -52,5 +67,23 @@
         </HorizontalScrollView>
     </RelativeLayout>
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:background="#777" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp">
+
+        <TextView
+            android:id="@+id/game_mode"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="@string/mode_open"
+            android:textColor="#000"
+            android:textSize="18sp" />
+    </RelativeLayout>
 
 </LinearLayout>

@@ -12,7 +12,7 @@
         android:layout_height="48dp"
         android:background="#eee"
         android:gravity="center"
-        android:text="经典扫雷" />
+        android:text="@string/mine_name" />
 
     <View
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="180dp"
-        android:text="play" />
+        android:text="@string/play" />
 
     <RadioGroup
         android:id="@+id/game_mode_choose"
@@ -41,18 +41,18 @@
             android:id="@+id/game_mode_primary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="初级" />
+            android:text="@string/primary" />
 
         <RadioButton
             android:id="@+id/game_mode_inter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="中级" />
+            android:text="@string/inter" />
 
         <RadioButton
             android:id="@+id/game_mode_senior"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="高级" />
+            android:text="@string/senior" />
     </RadioGroup>
 </RelativeLayout>

@@ -1,3 +1,17 @@
 <resources>
-    <string name="app_name">MineSweeper</string>
+    <string name="app_name">扫雷</string>
+    <string name="mine_name">简单的扫雷</string>
+    <string name="game_restart">刷新</string>
+    <string name="game_quit">退出</string>
+
+    <string name="primary">初级</string>
+    <string name="inter">中级</string>
+    <string name="senior">高级</string>
+
+    <string name="play">PLAY</string>
+
+    <string name="progress">进度：0%</string>
+
+    <string name="mode_open">翻开模式</string>
+    <string name="mode_mack">插旗模式</string>
 </resources>
