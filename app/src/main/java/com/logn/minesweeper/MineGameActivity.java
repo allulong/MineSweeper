@@ -14,12 +14,15 @@ import com.logn.minesweeper.views.GameView;
  */
 
 public class MineGameActivity extends Activity {
+
+    private GameView gameView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game_view);
 
-        final GameView gameView = (GameView) findViewById(R.id.game_mine);
+        gameView = (GameView) findViewById(R.id.game_mine);
 
         final TextView progressText = (TextView) findViewById(R.id.game_progress);
 
@@ -69,6 +72,7 @@ public class MineGameActivity extends Activity {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
+                gameView.resetGame();
             }
         });
         builder.setNegativeButton("关闭", new DialogInterface.OnClickListener() {

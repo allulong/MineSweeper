@@ -53,6 +53,7 @@ public class GameView extends FrameLayout implements View.OnClickListener {
      * 标记游戏是否结束
      */
     private boolean isGameOver = false;
+    private boolean hasWin = false;
 
     /**
      * 判断是有有第一个 MineView 翻开了。
@@ -70,8 +71,13 @@ public class GameView extends FrameLayout implements View.OnClickListener {
     public void onClick(View view) {
         if (isGameOver) {
             doItWhenGameOver();
+        } else if (hasWin) {
+            if (listener != null) {
+                progressListener.onProgress(1);
+            }
         }
     }
+
 
     public enum LEVEL {
         PRIMARY,
@@ -83,6 +89,7 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         count = 0;
         isFirst = true;
         isGameOver = false;
+        hasWin = false;
     }
 
     public static void setLevel(LEVEL level) {
@@ -228,6 +235,9 @@ public class GameView extends FrameLayout implements View.OnClickListener {
         count++;
         if (progressListener != null) {
             progressListener.onProgress(count / (float) noMineSum);
+            if (count == noMineSum) {
+                hasWin = true;
+            }
         }
     }
 
@@ -261,7 +271,7 @@ public class GameView extends FrameLayout implements View.OnClickListener {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        if (isGameOver) {
+        if (isGameOver || hasWin) {
             return true;
         }
         return super.onInterceptTouchEvent(ev);
