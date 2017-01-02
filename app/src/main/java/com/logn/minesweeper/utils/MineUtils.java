@@ -45,8 +45,8 @@ public class MineUtils {
      * @return
      */
     public static int[][] mineGenerator(int x, int y, int rows, int columns, int mineNum) {
-        if (mine == null)
-            mine = new int[rows][columns];
+        mine = new int[rows][columns];
+        resetMineFields();
         mineNum = mineNum >= (int) (rows * columns * 0.8) ? (int) (rows * columns * 0.8) : mineNum;
         setFirst(x, y, rows, columns);
         for (int i = 0; i < mineNum; i++) {
@@ -68,6 +68,16 @@ public class MineUtils {
             }
         }
         return mine;
+    }
+
+    private static void resetMineFields() {
+        if (mine != null) {
+            for (int i = 0; i < mine.length; i++) {
+                for (int j = 0; j < mine[0].length; j++) {
+                    mine[i][j] = 0;
+                }
+            }
+        }
     }
 
     /**
